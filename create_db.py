@@ -1,7 +1,7 @@
 import sqlite3
 
 # Create or connect to the database
-conn = sqlite3.connect("courses.db")
+conn = sqlite3.connect("databases/courses.db")
 cursor = conn.cursor()
 cursor.execute(
     """
@@ -21,7 +21,7 @@ cursor.execute(
 conn.commit()
 conn.close()
 
-conn = sqlite3.connect("professors.db")
+conn = sqlite3.connect("databases/professors.db")
 cursor = conn.cursor()
 cursor.execute(
     """
@@ -38,7 +38,7 @@ cursor.execute(
 conn.commit()
 conn.close()
 
-conn = sqlite3.connect("students.db")
+conn = sqlite3.connect("databases/students.db")
 cursor = conn.cursor()
 cursor.execute(
     """
