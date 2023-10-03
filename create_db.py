@@ -46,6 +46,7 @@ cursor.execute(
         studentID INTEGER PRIMARY KEY,
         first TEXT,
         last TEXT,
+        ufid INTEGER,
         email TEXT,
         choice1 INTEGER,
         choice2 INTEGER,
