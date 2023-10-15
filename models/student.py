@@ -69,3 +69,48 @@ class Student:
             print("Student saved successfully.")
         except sqlite3.Error as e:
             print(f"Error saving student: {e}")
+
+    def change_student_course(self, new_courseID):
+        try:
+            conn_stu = sqlite3.connect("databases/students.db")
+            conn_course = sqlite3.connect("databases/courses.db")
+            cursor_stu = conn_stu.cursor()
+
+            # Check if the target course has available capacity
+            cursor_stu.execute(
+                """
+                SELECT COUNT(*) FROM Student
+                WHERE assigned = ? AND isRegistered = 1
+                """,s
+                (new_courseID,),
+            )
+            count = cursor_stu.fetchone()[0]
+            cursor_course = conn_course.cursor()
+            cursor_course.execute(
+                """
+                SELECT capacity FROM Course
+                WHERE courseID = ?
+                """,
+                (new_courseID,),
+            )
+            capacity = cursor_course.fetchone()[0]
+            if count >= capacity:
+                print("The target course is already at full capacity. Course change not allowed.")
+            else:
+                # Update the student's assigned course ID
+                cursor_stu.execute(
+                    """
+                    UPDATE Student
+                    SET assigned = ?
+                    WHERE ufid = ?
+                    """,
+                    (new_courseID, self.ufid),
+                )
+                conn_stu.commit()
+                print(f"Student {self.ufid} has been reassigned to Course ID {new_courseID}.")
+
+            conn_stu.close()
+            conn_course.close()
+        except sqlite3.Error as e:
+            print(f"Error changing student's course: {e}")
+

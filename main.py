@@ -42,9 +42,17 @@ def main():
             create_student()
 
         elif choice == "4":
-            # Move a student to a new class
-            # Student.move_student()
-            break
+            print("Enter UFID of student you want to move:")
+            ufid = int(input())
+            try:
+                student = get_student_by_ufid(ufid)
+            except Exception as e:
+                print("could'nt get student, try again")
+                break
+            print("enter the courseID you need to move the student to")
+            courseID = input()
+            student.change_student_course(courseID)
+
 
         elif choice == "5":
             # Print student info
