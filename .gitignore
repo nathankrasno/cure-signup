@@ -1,1 +1,5 @@
 .vscode/settings.json
+databases/**
+input/**
+Pipfile.lock
+Pipfile

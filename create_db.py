@@ -29,9 +29,7 @@ cursor.execute(
         professorID INTEGER PRIMARY KEY,
         first TEXT,
         last TEXT,
-        prefix TEXT,
-        courseID INTEGER,
-        FOREIGN KEY (courseID) REFERENCES Course(courseID)
+        email TEXT
     )
 """
 )
@@ -43,10 +41,9 @@ cursor = conn.cursor()
 cursor.execute(
     """
     CREATE TABLE IF NOT EXISTS Student (
-        studentID INTEGER PRIMARY KEY,
+        ufid INTEGER PRIMARY KEY,
         first TEXT,
         last TEXT,
-        ufid INTEGER,
         email TEXT,
         choice1 INTEGER,
         choice2 INTEGER,

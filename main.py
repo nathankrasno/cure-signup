@@ -1,5 +1,8 @@
 import sqlite3
+import pandas as pd
 from models.student import Student
+from models.professor import Professor
+from models.course import Course
 
 # from models.professor import Professor
 # from models.course import Course
@@ -16,13 +19,16 @@ def main():
         print("3. Create Student")
         print("4. Move Student to New Class")
         print("5. Print Student Info")
-        print("6. Exit")
+        print("6. Delete Student")
+        print("7. Populate Courses & Professors")
+        print("8. Display all courses")
+        print("9. Display all professors")
+        print("10. Exit")
 
         choice = input("Enter your choice: ")
 
         if choice == "1":
-            # Create a new course
-            # Course.create_course()
+            #create_course
             break
 
         elif choice == "2":
@@ -44,13 +50,32 @@ def main():
             # Print student info
             print("Enter Student UFID: ")
             student_id = input()
-            student_info = get_student_by_ufid(student_id)
-            print("=" * 20)
-            for key, value in student_info.items():
-                print(f"{key}: {value}")
-            print("=" * 20)
-
+            try:
+                student = get_student_by_ufid(student_id)
+                student.display()
+            except Exception as e:
+                print("invalid UFID, try again")
         elif choice == "6":
+            #delete student
+            delete_student()
+            
+        elif choice == "7":
+            #read excel input
+            print("Excel should have the following columns:")
+            print("First,Last,Email,Course Title,Course Number,Course Cap,Description,Meeting Time,Meeting Location")
+            print("Type the relative file location")
+            file = input()
+            professors_courses_from_excel(file)
+            break
+        elif choice == "8":
+            #display courses
+            display_all_courses()
+            
+        elif choice == "9":
+            #display professors
+            display_all_professors()
+            
+        elif choice == "10":
             print("Exiting the program.")
             break
 
@@ -71,17 +96,8 @@ def display():
         if students:
             print("Student Information:")
             for student in students:
-                print(f"First Name: {student[0]}")
-                print(f"Last Name: {student[1]}")
-                print(f"Student ID: {student[2]}")
-                print(f"Email: {student[3]}")
-                print(f"Choice 1: {student[4]}")
-                print(f"Choice 2: {student[5]}")
-                print(f"Choice 3: {student[6]}")
-                print(f"Assigned: {student[7]}")
-                print(f"Is Registered: {student[8]}")
-                print(f"Is Completed: {student[9]}")
-                print("-" * 20)
+                s = Student(*student)
+                s.display()
         else:
             print("No students found in the database.")
 
@@ -90,6 +106,54 @@ def display():
     except sqlite3.Error as e:
         print(f"Error displaying students: {e}")
 
+def display_all_courses():
+    try:
+        # Open a connection to the database
+        conn = sqlite3.connect("databases/courses.db")
+        cursor = conn.cursor()
+
+        # Query and display all students
+        cursor.execute("SELECT * FROM Course")
+        courses = cursor.fetchall()
+
+        if courses:
+            print("Course Information:")
+            for course in courses:
+                c = Course(*course)
+                print("="*10)
+                c.display()
+        else:
+            print("No courses found in the database.")
+
+        # Close the connection
+        conn.close()
+    except sqlite3.Error as e:
+        print(f"Error displaying courses: {e}")
+
+def display_all_professors():
+    try:
+        conn = sqlite3.connect("databases/professors.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT professorID, first, last
+            FROM Professor
+        """
+        )
+
+        results = cursor.fetchall()
+        conn.close()
+
+        if results:
+            for professor in results:
+                professorID, first, last = professor
+                print(f"Professor ID: {professorID}, First Name: {first}, Last Name: {last}")
+        else:
+            print("No professors found.")
+
+    except sqlite3.Error as e:
+        print(f"Error retrieving professor info: {e}")
 
 def get_student_by_ufid(ufid):
     try:
@@ -100,21 +164,9 @@ def get_student_by_ufid(ufid):
         # Query the database to get student information by UFID
         cursor.execute("SELECT * FROM Student WHERE UFID = ?", (ufid,))
         student = cursor.fetchone()
-
         if student:
-            student_info = {
-                "First Name": student[0],
-                "Last Name": student[1],
-                "UFID": student[2],
-                "Email": student[3],
-                "Choice 1": student[4],
-                "Choice 2": student[5],
-                "Choice 3": student[6],
-                "Assigned": student[7],
-                "Is Registered": student[8],
-                "Is Completed": student[9],
-            }
-            return student_info
+            s = Student(*student)
+            return s
         else:
             print(f"No student found with UFID {ufid}.")
             return None
@@ -125,14 +177,13 @@ def get_student_by_ufid(ufid):
         print(f"Error getting student information by UFID: {e}")
         return None
 
-
 def create_student():
+    print("UFID:")
+    ufid = int(input())
     print("First Name:")
     first = input()
     print("Last Name:")
     last = input()
-    print("UFID:")
-    ufid = int(input())
     print("Email:")
     email = input()
     print("Choice 1 (Course ID):")
@@ -148,9 +199,9 @@ def create_student():
     print("Is Completed (True/False):")
     isCompleted = input().lower() == "true"
     student = Student(
+        ufid,
         first,
         last,
-        ufid,
         email,
         choice1,
         choice2,
@@ -161,6 +212,57 @@ def create_student():
     )
     student.save()
 
+def delete_student():
+    print("="*20)
+    print('Enter UFID')
+    ufid = int(input())
+    try:
+        # Open a connection to the database
+        conn = sqlite3.connect("databases/students.db")
+        cursor = conn.cursor()
 
+        # Query the database to get student information by UFID
+        cursor.execute("SELECT * FROM Student WHERE UFID = ?", (ufid,))
+        student = cursor.fetchone()
+        s = Student(*student)
+        print(f"Type '1' to confirm deleting {s.ufid}: {s.first} {s.last} with choices {s.choice1}, {s.choice2}, {s.choice3}")
+        confirm = input()
+        if confirm == "1":
+            cursor.execute("DELETE FROM Student WHERE UFID = ?", (ufid,))
+            conn.commit()
+            conn.close()
+        else:
+            print("Canceling...")
+            conn.close()
+            return
+    except sqlite3.Error as e:
+        print(f"Error getting student information by UFID: {e}")
+        return None
+
+def professors_courses_from_excel(file):
+    try:
+        # Read data from the Excel file
+        df = pd.read_excel(file)
+
+        print(df.head())
+
+        for index, row in df.iterrows():
+            professor = Professor(row['First'], row['Last'], row['Email'])
+            professor.save()
+            professorID = professor.get_id()
+            course = Course(
+                row['Course Title'],
+                row['Course Number'],
+                row['Course Cap'],
+                row['Description'],
+                row['Meeting Time'],
+                row['Meeting Location'],
+                professorID,
+            )
+            course.save()
+
+        print("Data import successful.")
+    except Exception as e:
+        print(f"Error importing data: {e}")
 if __name__ == "__main__":
     main()
